@@ -125,16 +125,6 @@ Detailed request/response shapes: `backend/README.md`.
 - `req.ip` relies on `trust proxy: 1`. For multi-hop deployments, bump the trust level.
 - `/stats` and `/suspicious` are intentionally global, not admin-only. A real product would gate them behind a role.
 
-## Screenshots
-
-Place screenshots under `docs/` and they'll render here:
-
-![Login](docs/login.png)
-![Dashboard](docs/dashboard.png)
-![Activity Simulator](docs/activity.png)
-![Stats](docs/stats.png)
-![Suspicious Users](docs/suspicious.png)
-
 ## Further reading
 
 - `backend/README.md` — backend details, curl examples, env reference
