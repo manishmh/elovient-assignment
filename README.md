@@ -7,7 +7,7 @@ Full-stack assignment. Node + Express + MongoDB backend, small React frontend. T
 - **Backend:** Node 20, Express 4, TypeScript (strict, NodeNext), MongoDB via Mongoose
 - **Frontend:** React 18, Vite, TypeScript, Tailwind v3, React Router v6
 - **Auth:** JWT (access + refresh), bcrypt, HTTP-only cookies
-- No external rate-limit, analytics, or session libraries — built per assignment rules.
+- No external rate-limit, analytics, or session libraries
 
 ## Features
 
