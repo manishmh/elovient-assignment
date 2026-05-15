@@ -29,7 +29,9 @@ export const computeActivityStats = async () => {
       { $group: { _id: '$userId', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 1 },
-      { $project: { _id: 0, userId: '$_id', count: 1 } },
+      { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+      { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
+      { $project: { _id: 0, userId: '$_id', email: '$user.email', count: 1 } },
     ]),
   ]);
 
