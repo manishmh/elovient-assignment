@@ -1,72 +1,82 @@
-# Smart Activity Tracker — Frontend
+# Frontend
 
-Minimal React + TypeScript + Tailwind frontend for the Smart Activity Tracker backend.
+React + Vite + Tailwind admin UI for the activity tracker.
 
 ## Stack
-- React 18 + TypeScript + Vite
+
+- React 18, TypeScript
+- Vite
 - Tailwind CSS v3
 - React Router v6
-- Native `fetch` (no axios, no state-management library)
+- Native `fetch` — no axios, no state-management library
 
 ## Setup
 
 ```bash
-cp .env.example .env   # set VITE_API_URL if backend is not on localhost:8080
+cp .env.example .env
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173. The backend (on `VITE_API_URL`) must allow this origin in CORS with `credentials: true` — already configured in `backend/src/app.ts`.
+Default: http://localhost:5173.
 
-## Folder Structure
+## Scripts
 
-```
-src/
-├── context/AuthContext.tsx    # auth state via Context API
-├── layouts/AppLayout.tsx      # top nav for protected pages
-├── pages/                     # one file per page
-│   ├── Login.tsx
-│   ├── Register.tsx
-│   ├── Dashboard.tsx
-│   ├── ActivitySimulator.tsx
-│   ├── Stats.tsx
-│   └── Suspicious.tsx
-├── routes/                    # ProtectedRoute + PublicRoute
-├── services/api.ts            # fetch wrapper, Bearer token, refresh on 401
-├── types/index.ts
-├── App.tsx                    # route tree
-├── main.tsx
-└── index.css
-```
+| Command           | What it does                          |
+| ----------------- | ------------------------------------- |
+| `npm run dev`     | Vite dev server with HMR              |
+| `npm run build`   | Type-check + build to `dist/`         |
+| `npm run preview` | Serve the built bundle                |
 
-## Auth
+## Environment
 
-- Access + refresh tokens are stored in `localStorage`.
-- `services/api.ts` attaches `Authorization: Bearer <accessToken>` to every request.
-- On 401, the wrapper tries `POST /api/auth/refresh` once and retries the original request. If refresh fails, tokens are cleared and the user is bounced to `/login`.
-- `AuthContext` restores the session on app mount by calling `GET /api/auth/me`.
+| Key            | Default                 | Purpose          |
+| -------------- | ----------------------- | ---------------- |
+| `VITE_API_URL` | http://localhost:8080   | backend base URL |
+
+The backend's `CORS_ORIGIN` must include the frontend URL.
 
 ## Routes
 
-| Path           | Access                | What it does                                                         |
-| -------------- | --------------------- | -------------------------------------------------------------------- |
-| `/login`       | Public                | Sign in form; redirects to `/dashboard` if already signed in         |
-| `/register`    | Public                | Create account; same redirect                                        |
-| `/dashboard`   | Protected             | User info + links                                                    |
-| `/activity`    | Protected             | Buttons for login/logout/click/view/custom → POST /api/activity + replay-check section |
-| `/stats`       | Protected             | Auto-refreshes /api/activity/stats every 5s                          |
-| `/suspicious`  | Protected             | List of flagged users; refreshes every 5s                            |
+| Path           | Access       | What's there                                         |
+| -------------- | ------------ | ---------------------------------------------------- |
+| `/login`       | public       | sign-in form                                         |
+| `/register`    | public       | register form                                        |
+| `/dashboard`   | protected    | user info + page links                               |
+| `/activity`    | protected    | action buttons + replay-check section + recent log   |
+| `/stats`       | protected    | analytics; auto-refresh every 5s                     |
+| `/suspicious`  | protected    | flagged users; auto-refresh every 5s                 |
 
-## Pages
+- Public routes redirect to `/dashboard` when already signed in.
+- Protected routes redirect to `/login` when not signed in.
 
-- **Login / Register** — single email + password form; inline error message.
-- **Dashboard** — user info card + three links.
-- **Activity Simulator** — two sections: "Log Action" (POST `/api/activity`) and "Replay Check" (POST `/api/activity/replay-check`, sends `clientTime: new Date().toISOString()` and displays the `driftMs` between server and client time). Logs the last 20 calls. When `/api/activity` returns 429 with "Rate limit", the action buttons are disabled for 10 seconds.
-- **Stats** — three cards (total / most common / most active user) + a per-minute list, polled every 5 seconds.
-- **Suspicious users** — table of `userId · reason · count`, polled every 5 seconds.
+## Folder layout
+
+```
+src/
+├── context/AuthContext.tsx   auth state (Context API)
+├── layouts/AppLayout.tsx     top nav for protected pages
+├── pages/                    one file per page
+├── routes/                   ProtectedRoute, PublicRoute
+├── services/api.ts           fetch wrapper
+├── types/index.ts
+├── App.tsx                   route tree
+└── main.tsx
+```
+
+No `components/` or `hooks/`. Pages render directly with Tailwind utilities.
+
+## Auth / session
+
+- Access + refresh tokens kept in `localStorage`.
+- `AuthContext` calls `GET /api/auth/me` on mount to restore the session.
+- `services/api.ts` attaches `Authorization: Bearer <accessToken>` to every request.
+- On 401, it calls `/api/auth/refresh` once with the stored refresh token and retries. If refresh fails, tokens are cleared and the user lands on `/login`.
+- Logout calls `/api/auth/logout`, clears tokens, clears the user state.
 
 ## Notes
 
-- No design-system abstractions — `<button>`, `<input>` are styled directly with Tailwind.
-- No charts or table libraries — `div` grids do the job for an admin tool.
-- Cookies (`accessToken`, `refreshToken`) are set by the backend as well, but this frontend uses the JSON-body tokens + `Authorization` header for simplicity. The `credentials: 'include'` flow isn't enabled here.
+- `services/api.ts` is the only fetch wrapper. Pages call `api(path, { method, body })` directly — no per-feature service layer.
+- `AuthContext` is the only React context. Page-level state stays local with `useState`/`useEffect`.
+- Styling stays minimal — thin borders, plain spacing, mono font for IDs and timestamps. No charts, no design system.
+- Activity simulator disables the action row for 10 seconds when the backend returns 429.
